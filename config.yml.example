@@ -1,0 +1,10 @@
+logfile: access.log
+checkers:
+  - kind: whitelist
+    allow:
+      - 127.0.0.1
+      - 192.168.1.1
+  - kind: geoip
+    allow:
+      - RU
+Execute: ip route add blackhole {{.IP}}
