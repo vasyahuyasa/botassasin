@@ -1,7 +1,10 @@
+//go:generate stringer -type=instantDecision
+
 package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -21,12 +24,17 @@ type checker interface {
 	Check(logLine) (harm harmScore, descision instantDecision)
 }
 
+type checkerWithKind struct {
+	checker
+	kind string
+}
+
 type chain struct {
-	checkers []checker
+	checkers []*checkerWithKind
 }
 
 func newChainFromConfig(cfg config) (*chain, error) {
-	var checkers []checker
+	var checkers []*checkerWithKind
 
 	for _, checkerCfg := range cfg.Checkers {
 		c, err := checkerFromConfig(checkerCfg)
@@ -47,6 +55,9 @@ func (c *chain) NeedBan(l logLine) bool {
 
 	for _, chk := range c.checkers {
 		s, decision := chk.Check(l)
+
+		log.Printf("%s %s score: %d decision: %s", l.IP(), chk.kind, s, decision)
+
 		if decision == decisionNone {
 			score += s
 			continue
@@ -55,10 +66,12 @@ func (c *chain) NeedBan(l logLine) bool {
 		return decision == decisionBan
 	}
 
-	return score >= 0
+	log.Printf("%s total score: %d", l.IP(), score)
+
+	return score > 0
 }
 
-func checkerFromConfig(cfg checkerConfig) (checker, error) {
+func checkerFromConfig(cfg checkerConfig) (*checkerWithKind, error) {
 	var kindOnly struct {
 		Kind string
 	}
@@ -70,7 +83,7 @@ func checkerFromConfig(cfg checkerConfig) (checker, error) {
 
 	switch strings.ToLower(kindOnly.Kind) {
 	case "whitelist":
-		c := whitelistConfig{}
+		c := iPwhitelistConfig{}
 
 		err = unmarshalConfig(cfg, &c)
 		if err != nil {
@@ -82,10 +95,25 @@ func checkerFromConfig(cfg checkerConfig) (checker, error) {
 			return nil, fmt.Errorf("cannot create whitelist: %w", err)
 		}
 
-		return wl, nil
+		return &checkerWithKind{checker: wl, kind: "whitelist"}, nil
+
+	case "geoip":
+		c := geoIPConfig{}
+
+		err = unmarshalConfig(cfg, &c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal GeoIP config: %w", err)
+		}
+
+		gi, err := newGeoIPChecker(c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create GeoIP: %w", err)
+		}
+
+		return &checkerWithKind{checker: gi, kind: "geoip"}, nil
 
 	default:
-		return nil, fmt.Errorf("cannot create whitelist: %w", err)
+		return nil, fmt.Errorf("unknown checker %q", kindOnly.Kind)
 	}
 }
 

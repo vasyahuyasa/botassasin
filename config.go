@@ -10,9 +10,10 @@ import (
 type checkerConfig interface{}
 
 type config struct {
-	Logfile  string
-	Checkers []checkerConfig
-	Execute  string
+	Logfile   string          `yaml:"logfile"`
+	LogFormat string          `yaml:"log_format"`
+	Checkers  []checkerConfig `yaml:"checkers"`
+	Execute   string          `yaml:"execute"`
 }
 
 func loadConfig(r io.Reader) (config, error) {

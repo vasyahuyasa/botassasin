@@ -6,32 +6,25 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"time"
 )
 
 const checkDelay = time.Millisecond * 300
 
-type logLine struct {
-	s string
-}
-
 type logStreamer struct {
-	ctx context.Context
-	f   *os.File
-	err error
-	pos int64
+	ctx    context.Context
+	f      *os.File
+	err    error
+	pos    int64
+	parser *logParser
 }
 
-func newLogLine(s string) logLine {
-	return logLine{s: s}
-}
-
-func newLogStreamer(ctx context.Context, f *os.File) (*logStreamer, error) {
+func newLogStreamer(ctx context.Context, f *os.File, parser *logParser) (*logStreamer, error) {
 	r := &logStreamer{
-		ctx: ctx,
-		f:   f,
+		ctx:    ctx,
+		f:      f,
+		parser: parser,
 	}
 
 	stat, err := f.Stat()
@@ -47,14 +40,6 @@ func newLogStreamer(ctx context.Context, f *os.File) (*logStreamer, error) {
 	}
 
 	return r, nil
-}
-
-func (l *logLine) IP() net.IP {
-	return net.IPv4(127, 0, 0, 1)
-}
-
-func (l *logLine) String() string {
-	return l.s
 }
 
 func (r *logStreamer) C() <-chan logLine {
@@ -97,7 +82,7 @@ func (r *logStreamer) C() <-chan logLine {
 					scanner := bufio.NewScanner(bytes.NewBuffer(buf))
 					for scanner.Scan() {
 						s := scanner.Text()
-						log := newLogLine(s)
+						log := r.parser.Parse(s)
 						c <- log
 					}
 
