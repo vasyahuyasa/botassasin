@@ -87,12 +87,12 @@ func checkerFromConfig(cfg checkerConfig) (*checkerWithKind, error) {
 
 		err = unmarshalConfig(cfg, &c)
 		if err != nil {
-			return nil, fmt.Errorf("cannot unmarshal whitelist config: %w", err)
+			return nil, fmt.Errorf("cannot unmarshal whitelist checker config: %w", err)
 		}
 
 		wl, err := newWhitelistChecker(c)
 		if err != nil {
-			return nil, fmt.Errorf("cannot create whitelist: %w", err)
+			return nil, fmt.Errorf("cannot create whitelist checker: %w", err)
 		}
 
 		return &checkerWithKind{checker: wl, kind: "whitelist"}, nil
@@ -102,15 +102,30 @@ func checkerFromConfig(cfg checkerConfig) (*checkerWithKind, error) {
 
 		err = unmarshalConfig(cfg, &c)
 		if err != nil {
-			return nil, fmt.Errorf("cannot unmarshal GeoIP config: %w", err)
+			return nil, fmt.Errorf("cannot unmarshal GeoIP checker config: %w", err)
 		}
 
 		gi, err := newGeoIPChecker(c)
 		if err != nil {
-			return nil, fmt.Errorf("cannot create GeoIP: %w", err)
+			return nil, fmt.Errorf("cannot create GeoIP checker: %w", err)
 		}
 
 		return &checkerWithKind{checker: gi, kind: "geoip"}, nil
+
+	case "list":
+		c := listCheckerConfig{}
+
+		err = unmarshalConfig(cfg, &c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal list checker config: %w", err)
+		}
+
+		list, err := newListChecker(c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create list checker: %w", err)
+		}
+
+		return &checkerWithKind{checker: list, kind: "list"}, nil
 
 	default:
 		return nil, fmt.Errorf("unknown checker %q", kindOnly.Kind)
