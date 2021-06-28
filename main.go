@@ -43,7 +43,7 @@ func main() {
 		log.Fatalf("cannot initialize log stre: %v", err)
 	}
 
-	act, err := newAction(cfg.Execute)
+	act, err := newAction(cfg.BlockAction)
 	if err != nil {
 		log.Fatalf("cannot create action: %v", err)
 	}
