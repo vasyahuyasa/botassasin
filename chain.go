@@ -82,21 +82,6 @@ func checkerFromConfig(cfg checkerConfig) (*checkerWithKind, error) {
 	}
 
 	switch strings.ToLower(kindOnly.Kind) {
-	case "whitelist":
-		c := iPwhitelistConfig{}
-
-		err = unmarshalConfig(cfg, &c)
-		if err != nil {
-			return nil, fmt.Errorf("cannot unmarshal whitelist checker config: %w", err)
-		}
-
-		wl, err := newWhitelistChecker(c)
-		if err != nil {
-			return nil, fmt.Errorf("cannot create whitelist checker: %w", err)
-		}
-
-		return &checkerWithKind{checker: wl, kind: "whitelist"}, nil
-
 	case "geoip":
 		c := geoIPConfig{}
 

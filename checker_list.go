@@ -23,12 +23,16 @@ const (
 	httpRequestTimeout = time.Second * 5
 )
 
-var listCheckerActionMap = map[string]listCheckerAction{
-	"whitelist": listCheckerActionWhitelist,
-	"block":     listCheckerActionBlock,
-}
+var (
+	listCheckerActionMap = map[string]listCheckerAction{
+		"whitelist": listCheckerActionWhitelist,
+		"block":     listCheckerActionBlock,
+	}
 
-var _ checker = &listChecker{}
+	_ checker = &listChecker{}
+
+	ipMaskFull = net.IPMask{0xff, 0xff, 0xff, 0xff}
+)
 
 type listCheckerAction int
 
@@ -215,4 +219,15 @@ func strInSlice(str string, all []string) bool {
 	}
 
 	return false
+}
+
+func parseIPorCIDR(ip string) (*net.IPNet, error) {
+	if strings.IndexByte(ip, '/') != -1 {
+		_, ipNet, err := net.ParseCIDR(ip)
+		return ipNet, err
+	}
+
+	ip4 := net.ParseIP(ip)
+
+	return &net.IPNet{IP: ip4, Mask: ipMaskFull}, nil
 }

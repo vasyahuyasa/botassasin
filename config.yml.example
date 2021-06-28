@@ -1,6 +1,19 @@
 logfile: test.log
 log_format: ^(?P<ip>.+) - - \[.*\] \"(?P<method>.+) (?P<request>.+) (?P<proto>.+)\" \d{3} \d+ \"(?P<referer>.*)\" \"(?P<user_agent>.*)\" rt.*$
 checkers:
+  - kind: list
+    sources:
+      - src: ./lists/our_servers.txt
+        type: txt
+        action: whitelist
+      - src: https://ip-ranges.amazonaws.com/ip-ranges.json
+        type: aws_ip_ranges
+        action: whitelist
+        aws_service_filter:
+          - ROUTE53_HEALTHCHECKS
+      - src: https://check.torproject.org/torbulkexitlist
+        type: txt
+        action: block
   - kind: whitelist
     allow:
       - 127.0.0.1
@@ -9,4 +22,4 @@ checkers:
     allow:
       - RU
     path: ""
-execute: ip route add blackhole {{.IP}}
+block_action: ip route add blackhole {{.IP}}
