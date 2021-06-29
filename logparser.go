@@ -34,6 +34,11 @@ func (l *logLine) String() string {
 	return fmt.Sprintf("%s %v", l.ip.String(), l.fields)
 }
 
+func (l *logLine) Get(field string) (string, bool) {
+	str, ok := l.fields[field]
+	return str, ok
+}
+
 func (p *logParser) Parse(str string) logLine {
 	matches := p.re.FindStringSubmatch(str)
 

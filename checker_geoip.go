@@ -20,13 +20,13 @@ type geoIPRecord struct {
 }
 
 type geoIPConfig struct {
-	Path  string
-	Allow []string
+	Path             string
+	AllowedCountries []string
 }
 
 type geoIPChecker struct {
-	db    *maxminddb.Reader
-	allow []string
+	db               *maxminddb.Reader
+	allowedCountries []string
 }
 
 func newGeoIPChecker(cfg geoIPConfig) (*geoIPChecker, error) {
@@ -55,11 +55,11 @@ func newGeoIPChecker(cfg geoIPConfig) (*geoIPChecker, error) {
 		dbPath = cfg.Path
 	}
 
-	log.Printf("geoIP loaded %q, allow countries %v: ", dbPath, cfg.Allow)
+	log.Printf("geoIP loaded %q, allow countries %v: ", dbPath, cfg.AllowedCountries)
 
 	return &geoIPChecker{
-		db:    db,
-		allow: cfg.Allow,
+		db:               db,
+		allowedCountries: cfg.AllowedCountries,
 	}, nil
 }
 
@@ -72,7 +72,7 @@ func (gi *geoIPChecker) Check(l logLine) (score harmScore, decision instantDecis
 		return 0, decisionNone
 	}
 
-	for _, allowed := range gi.allow {
+	for _, allowed := range gi.allowedCountries {
 		if rec.Country.ISOCode == allowed {
 			return 0, decisionWhitelist
 		}
