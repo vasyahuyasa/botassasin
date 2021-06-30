@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
 const (
-	fieldCheckerActionWhitelist = iota
+	fieldCheckerActionWhitelist fieldCheckerAction = iota
 	fieldCheckerActionBan
 )
 
@@ -38,6 +39,8 @@ func newFieldChecker(cfg fieldCheckerConfig) (*fieldChecker, error) {
 	if !ok {
 		return nil, fmt.Errorf("unknow action %q (supported: whitelist, block)", cfg.Action)
 	}
+
+	log.Printf("check field %q contains %v action %s", cfg.FieldName, strings.Join(cfg.Contains, ","), cfg.Action)
 
 	return &fieldChecker{
 		field:    cfg.FieldName,

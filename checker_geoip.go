@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/oschwald/maxminddb-golang"
 )
@@ -20,8 +21,8 @@ type geoIPRecord struct {
 }
 
 type geoIPConfig struct {
-	Path             string
-	AllowedCountries []string
+	Path             string   `yaml:"path"`
+	AllowedCountries []string `yaml:"allowed_countries"`
 }
 
 type geoIPChecker struct {
@@ -55,7 +56,7 @@ func newGeoIPChecker(cfg geoIPConfig) (*geoIPChecker, error) {
 		dbPath = cfg.Path
 	}
 
-	log.Printf("geoIP loaded %q, allow countries %v: ", dbPath, cfg.AllowedCountries)
+	log.Printf("geoIP loaded %q, allow countries %s", dbPath, strings.Join(cfg.AllowedCountries, ","))
 
 	return &geoIPChecker{
 		db:               db,
