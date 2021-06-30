@@ -112,6 +112,36 @@ func checkerFromConfig(cfg checkerConfig) (*checkerWithKind, error) {
 
 		return &checkerWithKind{checker: list, kind: "list"}, nil
 
+	case "field":
+		c := fieldCheckerConfig{}
+
+		err = unmarshalConfig(cfg, &c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal field checker config: %w", err)
+		}
+
+		field, err := newFieldChecker(c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create field checker: %w", err)
+		}
+
+		return &checkerWithKind{checker: field, kind: "field"}, nil
+
+	case "reverse_dns":
+		c := reverseDNSCheckerConfig{}
+
+		err = unmarshalConfig(cfg, &c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal reverse DNS checker config: %w", err)
+		}
+
+		rdns, err := newReverseDNSChecker(c)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create reverse DNS checker: %w", err)
+		}
+
+		return &checkerWithKind{checker: rdns, kind: "reverse_dns"}, nil
+
 	default:
 		return nil, fmt.Errorf("unknown checker %q", kindOnly.Kind)
 	}

@@ -21,6 +21,13 @@ func main() {
 		log.Fatalf("cannot load config: %v", err)
 	}
 
+	parser, err := newLogParser(cfg.LogFormat)
+	if err != nil {
+		log.Fatalf("cannot create log parser: %v", err)
+	}
+
+	log.Println("log format:", cfg.LogFormat)
+
 	cn, err := newChainFromConfig(cfg)
 	if err != nil {
 		log.Fatalf("cannot create chain: %v", err)
@@ -29,13 +36,6 @@ func main() {
 	streamfile, err := os.Open(cfg.Logfile)
 	if err != nil {
 		log.Fatalf("cannot open log file %s: %v", cfg.Logfile, err)
-	}
-
-	log.Println("format:", cfg.LogFormat)
-
-	parser, err := newLogParser(cfg.LogFormat)
-	if err != nil {
-		log.Fatalf("cannot create log parser: %v", err)
 	}
 
 	logStream, err := newLogStreamer(context.Background(), streamfile, parser)

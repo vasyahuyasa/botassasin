@@ -77,7 +77,7 @@ func newListChecker(cfg listCheckerConfig) (*listChecker, error) {
 				ips:    ips,
 				action: action,
 			})
-			log.Printf("list %s created with %d rules action = %s", srcCfg.Type, len(ips), srcCfg.Action)
+			log.Printf("list %s (%s) created with %d rules action = %s", srcCfg.Type, srcCfg.Src, len(ips), srcCfg.Action)
 
 		case listCheckerSrcTypeAWSIpRanges:
 			ips, err := parseAWSIpRanges(data, srcCfg.AwsServiceFilter)
@@ -88,7 +88,7 @@ func newListChecker(cfg listCheckerConfig) (*listChecker, error) {
 				ips:    ips,
 				action: action,
 			})
-			log.Printf("list %s created with %d rules action = %s filter = %v", srcCfg.Type, len(ips), srcCfg.Action, srcCfg.AwsServiceFilter)
+			log.Printf("list %s (%s) created with %d rules action = %s filter = %v", srcCfg.Type, srcCfg.Src, len(ips), srcCfg.Action, srcCfg.AwsServiceFilter)
 
 		default:
 			return nil, fmt.Errorf("unknown source type %q (supported types %v)", srcCfg.Type, []string{listCheckerSrcTypeTxt, listCheckerSrcTypeAWSIpRanges})

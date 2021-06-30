@@ -73,6 +73,8 @@ func newReverseDNSChecker(cfg reverseDNSCheckerConfig) (*reverseDNSChecker, erro
 			}
 		}
 
+		log.Printf("reverse dns field %q contains [%s] DNS suffix [%s] resolver %s", r.Field, strings.Join(r.FieldContains, ","), strings.Join(r.DomainSuffixes, ","), r.ResolverAddr)
+
 		rules = append(rules, reverseDNSCheckerRule{
 			field:         r.Field,
 			fieldContains: r.FieldContains,
