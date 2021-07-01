@@ -43,23 +43,20 @@ func main() {
 		log.Fatalf("cannot initialize log stre: %v", err)
 	}
 
-	act, err := newAction(cfg.BlockAction)
+	act, err := newAction(cfg.BlockAction.params)
 	if err != nil {
 		log.Fatalf("cannot create action: %v", err)
 	}
 
+	log.Printf("block action: %s", cfg.BlockAction)
+
 	log.Printf("watch %s", cfg.Logfile)
 
-	for ln := range logStream.C() {
-		if cn.NeedBan(ln) {
-			log.Println("ban", ln.IP())
-			if actErr := act.Execute(ln); actErr != nil {
-				log.Printf("cannot execute action: %v", err)
-			}
-		}
-	}
+	app := newAppCore(logStream, cn, act)
 
-	if streamErr := logStream.Err(); streamErr != nil {
-		log.Default().Printf("log streamer done with error: %v", err)
+	err = app.run()
+
+	if err != nil {
+		log.Printf("log streamer exit with error: %v", err)
 	}
 }
