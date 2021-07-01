@@ -4,3 +4,4 @@ test.log
 access.log
 lists/*.txt
 block.txt
+block_.txt
