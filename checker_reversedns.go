@@ -86,9 +86,9 @@ func newReverseDNSChecker(cfg reverseDNSCheckerConfig) (*reverseDNSChecker, erro
 	return &reverseDNSChecker{rules: rules}, nil
 }
 
-func (rdns *reverseDNSChecker) Check(l logLine) (score harmScore, descision instantDecision) {
+func (rdns *reverseDNSChecker) Check(l *logLine) (score harmScore, descision instantDecision) {
 	for _, rule := range rdns.rules {
-		if rule.match(l) {
+		if rule.match(*l) {
 			ok, err := rule.fineDNS(l.IP())
 			if err != nil {
 				log.Printf("cannot check DNS for %q: %v", l.IP(), err)

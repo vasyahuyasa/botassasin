@@ -224,7 +224,7 @@ func Test_listChecker_Check_File(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotScore, gotDescision := c.Check(tt.logLine)
+			gotScore, gotDescision := c.Check(&tt.logLine)
 			if gotScore != tt.wantScore {
 				t.Errorf("listChecker.Check() gotScore = %v, want %v", gotScore, tt.wantScore)
 			}
@@ -454,7 +454,7 @@ func Test_listChecker_Check_Webserver(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			gotScore, gotDescision := c.Check(tt.logLine)
+			gotScore, gotDescision := c.Check(&tt.logLine)
 			if gotScore != tt.wantScore {
 				t.Errorf("listChecker.Check() gotScore = %v, want %v", gotScore, tt.wantScore)
 			}

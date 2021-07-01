@@ -59,13 +59,12 @@ func (a *action) Execute(l logLine) error {
 
 func (a *action) formatCmdTpl(l logLine) (string, []string, error) {
 	params := cmdParams{
-		"IP": l.IP().String(),
+		"ip": l.IP().String(),
 	}
 
-	for _, field := range l.Fields() {
-		v, _ := l.Get(field)
-		params[field] = v
-	}
+	l.EachField(func(k, v string) {
+		params[k] = v
+	})
 
 	var cmd string
 	var cmdParams []string
@@ -75,7 +74,7 @@ func (a *action) formatCmdTpl(l logLine) (string, []string, error) {
 
 		err := tpl.Execute(buf, params)
 		if err != nil {
-			return "", nil, fmt.Errorf("param %d: %w", err)
+			return "", nil, fmt.Errorf("param %d: %w", i, err)
 		}
 
 		if i == 0 {

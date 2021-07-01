@@ -96,7 +96,7 @@ func Test_fieldChecker_Check(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotHarm, gotDescision := fc.Check(tt.logLine)
+			gotHarm, gotDescision := fc.Check(&tt.logLine)
 			if gotHarm != tt.wantHarm {
 				t.Errorf("fieldChecker.Check() gotHarm = %v, want %v", gotHarm, tt.wantHarm)
 			}

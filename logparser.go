@@ -26,6 +26,12 @@ func newLogParser(format string) (*logParser, error) {
 	return &logParser{re: re}, nil
 }
 
+func newLogLine() *logLine {
+	return &logLine{
+		fields: map[string]string{},
+	}
+}
+
 func (l *logLine) IP() net.IP {
 	return l.ip
 }
@@ -39,26 +45,24 @@ func (l *logLine) Get(field string) (string, bool) {
 	return str, ok
 }
 
-func (l *logLine) Fields() []string {
-	var fields []string
-
-	for k, _ := range l.fields {
-		fields = append(fields, k)
-	}
-
-	return fields
+func (l *logLine) Set(field, v string) {
+	l.fields[field] = v
 }
 
-func (p *logParser) Parse(str string) logLine {
+func (l *logLine) EachField(fn func(key, value string)) {
+	for k, v := range l.fields {
+		fn(k, v)
+	}
+}
+
+func (p *logParser) Parse(str string) *logLine {
 	matches := p.re.FindStringSubmatch(str)
 
 	if p.mapping == nil {
 		p.makeMapping()
 	}
 
-	var l logLine
-
-	fields := map[string]string{}
+	l := newLogLine()
 
 	for name, i := range p.mapping {
 		if name == "ip" {
@@ -66,10 +70,8 @@ func (p *logParser) Parse(str string) logLine {
 			continue
 		}
 
-		fields[name] = matches[i]
+		l.Set(name, matches[i])
 	}
-
-	l.fields = fields
 
 	return l
 }

@@ -42,8 +42,8 @@ func newLogStreamer(ctx context.Context, f *os.File, parser *logParser) (*logStr
 	return r, nil
 }
 
-func (r *logStreamer) C() <-chan logLine {
-	c := make(chan logLine)
+func (r *logStreamer) C() <-chan *logLine {
+	c := make(chan *logLine)
 
 	go func() {
 		for {

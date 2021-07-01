@@ -15,10 +15,12 @@ type configBlockAction struct {
 }
 
 type config struct {
-	Logfile     string            `yaml:"logfile"`
-	LogFormat   string            `yaml:"log_format"`
-	Checkers    []checkerConfig   `yaml:"checkers"`
-	BlockAction configBlockAction `yaml:"block_action"`
+	Logfile          string            `yaml:"logfile"`
+	LogFormat        string            `yaml:"log_format"`
+	Checkers         []checkerConfig   `yaml:"checkers"`
+	BlockAction      configBlockAction `yaml:"block_action"`
+	Blocklog         string            `yaml:"blocklog"`
+	BlocklogTemplate string            `yaml:"blocklog_template"`
 }
 
 func loadConfig(r io.Reader) (config, error) {
