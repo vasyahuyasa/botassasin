@@ -3,3 +3,4 @@ config.yml
 test.log
 access.log
 lists/*.txt
+block.txt

@@ -39,6 +39,16 @@ func (l *logLine) Get(field string) (string, bool) {
 	return str, ok
 }
 
+func (l *logLine) Fields() []string {
+	var fields []string
+
+	for k, _ := range l.fields {
+		fields = append(fields, k)
+	}
+
+	return fields
+}
+
 func (p *logParser) Parse(str string) logLine {
 	matches := p.re.FindStringSubmatch(str)
 
