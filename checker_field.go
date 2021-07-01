@@ -49,7 +49,7 @@ func newFieldChecker(cfg fieldCheckerConfig) (*fieldChecker, error) {
 	}, nil
 }
 
-func (fc *fieldChecker) Check(l logLine) (harm harmScore, descision instantDecision) {
+func (fc *fieldChecker) Check(l *logLine) (harm harmScore, descision instantDecision) {
 	fieldVal, ok := l.Get(fc.field)
 	if !ok {
 		return 0, decisionNone

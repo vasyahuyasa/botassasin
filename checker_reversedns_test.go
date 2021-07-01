@@ -186,7 +186,7 @@ func Test_reverseDNSChecker_Check(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotScore, gotDescision := rdns.Check(tt.logLine)
+			gotScore, gotDescision := rdns.Check(&tt.logLine)
 			if gotScore != tt.wantScore {
 				t.Errorf("reverseDNSChecker.Check() gotScore = %v, want %v", gotScore, tt.wantScore)
 			}

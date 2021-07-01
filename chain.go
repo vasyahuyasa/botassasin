@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -14,6 +15,10 @@ const (
 	decisionNone instantDecision = iota
 	decisionBan
 	decisionWhitelist
+
+	checkerField     = "checker"
+	scoreField       = "score"
+	scoreCheckerName = "score"
 )
 
 type instantDecision int
@@ -21,7 +26,7 @@ type instantDecision int
 type harmScore int
 
 type checker interface {
-	Check(logLine) (harm harmScore, descision instantDecision)
+	Check(*logLine) (harm harmScore, descision instantDecision)
 }
 
 type checkerWithKind struct {
@@ -50,7 +55,7 @@ func newChainFromConfig(cfg config) (*chain, error) {
 	}, nil
 }
 
-func (c *chain) NeedBan(l logLine) bool {
+func (c *chain) NeedBan(l *logLine) bool {
 	score := harmScore(0)
 
 	for _, chk := range c.checkers {
@@ -63,10 +68,16 @@ func (c *chain) NeedBan(l logLine) bool {
 			continue
 		}
 
+		l.Set(checkerField, chk.kind)
+		l.Set(scoreField, strconv.Itoa(int(score)))
+
 		return decision == decisionBan
 	}
 
 	log.Printf("%s total score: %d", l.IP(), score)
+
+	l.Set(checkerField, scoreCheckerName)
+	l.Set(scoreField, strconv.Itoa(int(score)))
 
 	return score > 0
 }

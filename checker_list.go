@@ -101,7 +101,7 @@ func newListChecker(cfg listCheckerConfig) (*listChecker, error) {
 	}, nil
 }
 
-func (c *listChecker) Check(l logLine) (score harmScore, descision instantDecision) {
+func (c *listChecker) Check(l *logLine) (score harmScore, descision instantDecision) {
 	for _, list := range c.lists {
 		if list.contains(l.IP()) {
 			if list.action == listCheckerActionWhitelist {

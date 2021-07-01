@@ -14,12 +14,29 @@ checkers:
       - src: https://check.torproject.org/torbulkexitlist
         type: txt
         action: block
-  - kind: whitelist
-    allow:
-      - 127.0.0.1
-      - 192.168.1.1
   - kind: geoip
-    allow:
+    allowed_countries:
       - RU
     path: ""
-block_action: ip route add blackhole {{.IP}}
+  - kind: field
+    field_name: user_agent
+    contains:
+      - Go-http-client
+    action: block
+  - kind: reverse_dns
+    rules:
+      - field: user_agent
+        field_contains:
+          - Google
+          - Googlebot
+          - googleweblight
+        domain_suffixes: 
+          - googlebot.com
+          - google.com
+        resolver: 8.8.8.8
+block_action:
+    - bash
+    - -c
+    - echo {{.ip}} >> block_.txt
+blocklog: block.txt
+blocklog_template: "{{.time}} {{.ip}} {{.country}} {{.checker}}"

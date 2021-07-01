@@ -12,11 +12,12 @@ type appcore struct {
 	streamer *logStreamer
 	c        *chain
 	act      *action
+	log      *logPrinter
 }
 
 type ipCache map[string]struct{}
 
-func newAppCore(streamer *logStreamer, c *chain, act *action) *appcore {
+func newAppCore(streamer *logStreamer, c *chain, act *action, lp *logPrinter) *appcore {
 	return &appcore{
 		passCache:  ipCache{},
 		blockCache: ipCache{},
@@ -24,6 +25,7 @@ func newAppCore(streamer *logStreamer, c *chain, act *action) *appcore {
 		streamer: streamer,
 		c:        c,
 		act:      act,
+		log:      lp,
 	}
 }
 
@@ -44,7 +46,9 @@ func (core *appcore) run() error {
 		if core.c.NeedBan(l) {
 			core.blockCache.add(ip)
 
-			err := core.act.Execute(l)
+			core.log.Println(*l)
+
+			err := core.act.Execute(*l)
 			if err != nil {
 				log.Printf("cannot execute action: %v", err)
 			}

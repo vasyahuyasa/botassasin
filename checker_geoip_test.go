@@ -58,7 +58,7 @@ func Test_geoIPChecker_Check(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotScore, gotDecision := gi.Check(tt.logLine)
+			gotScore, gotDecision := gi.Check(&tt.logLine)
 			if gotScore != tt.wantScore {
 				t.Errorf("geoIPChecker.Check() gotScore = %v, want %v", gotScore, tt.wantScore)
 			}

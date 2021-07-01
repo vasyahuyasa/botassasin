@@ -50,9 +50,14 @@ func main() {
 
 	log.Printf("block action: %s", cfg.BlockAction)
 
-	log.Printf("watch %s", cfg.Logfile)
+	lp, err := newLogPrinter(cfg.Blocklog, cfg.BlocklogTemplate)
+	if err != nil {
+		log.Fatalf("cannot create log printer: %v", err)
+	}
 
-	app := newAppCore(logStream, cn, act)
+	app := newAppCore(logStream, cn, act, lp)
+
+	log.Printf("watch %s", cfg.Logfile)
 
 	err = app.run()
 

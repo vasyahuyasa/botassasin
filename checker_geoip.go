@@ -9,6 +9,8 @@ import (
 	"github.com/oschwald/maxminddb-golang"
 )
 
+const countryField = "country"
+
 //go:embed GeoLite2-Country.mmdb
 var embededGeoIP []byte
 
@@ -64,7 +66,7 @@ func newGeoIPChecker(cfg geoIPConfig) (*geoIPChecker, error) {
 	}, nil
 }
 
-func (gi *geoIPChecker) Check(l logLine) (score harmScore, decision instantDecision) {
+func (gi *geoIPChecker) Check(l *logLine) (score harmScore, decision instantDecision) {
 	var rec geoIPRecord
 
 	err := gi.db.Lookup(l.IP(), &rec)
@@ -72,6 +74,8 @@ func (gi *geoIPChecker) Check(l logLine) (score harmScore, decision instantDecis
 		log.Printf("cannot check country for %v: %v", l, err)
 		return 0, decisionNone
 	}
+
+	l.Set(countryField, rec.Country.ISOCode)
 
 	for _, allowed := range gi.allowedCountries {
 		if rec.Country.ISOCode == allowed {
