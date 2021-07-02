@@ -130,4 +130,4 @@ Rule params
 | field       | string | Field for check. Rule triggered if field contains specified substrins
 | field_contains | array | List of substrings. One of those substring must be present in `field` for trigger rule
 | domain_suffixes | array | List of suffixes. Hostname of reverse DNS query must have one of suffixes othervise IP will be banned
-| resolver | string | Address of DNS server if empty use system resolver
+| resolver | string | Address of DNS server for resolve if empty use system resolver
