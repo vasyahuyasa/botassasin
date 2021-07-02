@@ -1,6 +1,9 @@
 # WIP: botassasin
 
 ## Configuration
+
+botassasin require `config.yml` for run. Check `config.yml.example` for full example
+
 | Param                | Type          | Description
 |----------------------|---------------|----------------------------
 | debug                | bool          | Print more information
