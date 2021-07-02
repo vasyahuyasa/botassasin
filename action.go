@@ -3,9 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os/exec"
 	"text/template"
+
+	"github.com/vasyahuyasa/botassasin/log"
 )
 
 type cmdParams map[string]string

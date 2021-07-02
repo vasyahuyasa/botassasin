@@ -1,5 +1,6 @@
+debug: false
 logfile: test.log
-log_format: ^(?P<ip>.+) - - \[.*\] \"(?P<method>.+) (?P<request>.+) (?P<proto>.+)\" \d{3} \d+ \"(?P<referer>.*)\" \"(?P<user_agent>.*)\" rt.*$
+log_format: ^(?P<ip>\d+\.\d+\.\d+\.\d+) - - \[.{26}\] \"(?P<request>[^\"]*)\" \d{3} \d+ \"(?P<referer>[^\"]*)\" \"(?P<user_agent>[^\"]*)\" rt.*$
 checkers:
   - kind: list
     sources:
@@ -40,3 +41,4 @@ block_action:
     - echo {{.ip}} >> block_.txt
 blocklog: block.txt
 blocklog_template: "{{.time}} {{.ip}} {{.country}} {{.checker}}"
+whitelist_cache_path: whitelist.txt

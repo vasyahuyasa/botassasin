@@ -100,7 +100,6 @@ func (r *logStreamer) C() <-chan *logLine {
 				time.Sleep(checkDelay)
 			}
 		}
-
 	}()
 
 	return c

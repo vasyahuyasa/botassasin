@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"regexp"
+
+	"github.com/vasyahuyasa/botassasin/log"
 )
 
 type logLine struct {
@@ -58,6 +60,8 @@ func (l *logLine) EachField(fn func(key, value string)) {
 func (p *logParser) Parse(str string) *logLine {
 	matches := p.re.FindStringSubmatch(str)
 
+	maxMatch := len(matches)
+
 	if p.mapping == nil {
 		p.makeMapping()
 	}
@@ -65,6 +69,11 @@ func (p *logParser) Parse(str string) *logLine {
 	l := newLogLine()
 
 	for name, i := range p.mapping {
+		if i >= maxMatch {
+			log.Printf("log parse failed: %s", str)
+			break
+		}
+
 		if name == "ip" {
 			l.ip = net.ParseIP(matches[i])
 			continue
