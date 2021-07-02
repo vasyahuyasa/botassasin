@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
+
+	"github.com/vasyahuyasa/botassasin/log"
 )
 
 const (

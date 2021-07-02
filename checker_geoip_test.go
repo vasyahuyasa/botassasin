@@ -21,7 +21,8 @@ func Test_geoIPChecker_Check(t *testing.T) {
 				AllowedCountries: []string{"RU"},
 			},
 			logLine: logLine{
-				ip: net.IPv4(95, 173, 136, 72),
+				ip:     net.IPv4(95, 173, 136, 72),
+				fields: map[string]string{},
 			},
 			wantScore:    0,
 			wantDecision: decisionWhitelist,
@@ -33,7 +34,8 @@ func Test_geoIPChecker_Check(t *testing.T) {
 				AllowedCountries: []string{"FR"},
 			},
 			logLine: logLine{
-				ip: net.IPv4(95, 173, 136, 72),
+				ip:     net.IPv4(95, 173, 136, 72),
+				fields: map[string]string{},
 			},
 			wantScore:    0,
 			wantDecision: decisionBan,
@@ -45,7 +47,8 @@ func Test_geoIPChecker_Check(t *testing.T) {
 				AllowedCountries: []string{"FR", "RU", "CN"},
 			},
 			logLine: logLine{
-				ip: net.IPv4(1, 2, 3, 4),
+				ip:     net.IPv4(1, 2, 3, 4),
+				fields: map[string]string{},
 			},
 			wantScore:    0,
 			wantDecision: decisionBan,

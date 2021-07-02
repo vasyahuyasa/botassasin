@@ -4,10 +4,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
+	"github.com/vasyahuyasa/botassasin/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -61,7 +61,7 @@ func (c *chain) NeedBan(l *logLine) bool {
 	for _, chk := range c.checkers {
 		s, decision := chk.Check(l)
 
-		log.Printf("%s %s score: %d decision: %s", l.IP(), chk.kind, s, decision)
+		log.Debug("%s %s score: %d decision: %s", l.IP(), chk.kind, s, decision)
 
 		if decision == decisionNone {
 			score += s
@@ -74,7 +74,7 @@ func (c *chain) NeedBan(l *logLine) bool {
 		return decision == decisionBan
 	}
 
-	log.Printf("%s total score: %d", l.IP(), score)
+	log.Debug("%s total score: %d", l.IP(), score)
 
 	l.Set(checkerField, scoreCheckerName)
 	l.Set(scoreField, strconv.Itoa(int(score)))

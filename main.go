@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
+
+	"github.com/vasyahuyasa/botassasin/log"
 )
 
 const configFile = "config.yml"
 
 func main() {
+
 	f, err := os.Open(configFile)
 	if err != nil {
 		log.Fatalf("cannot open config file %s: %v", configFile, err)
@@ -20,6 +22,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot load config: %v", err)
 	}
+
+	log.EnableDebug(cfg.Debug)
 
 	parser, err := newLogParser(cfg.LogFormat)
 	if err != nil {
@@ -55,7 +59,7 @@ func main() {
 		log.Fatalf("cannot create log printer: %v", err)
 	}
 
-	app := newAppCore(logStream, cn, act, lp)
+	app := newAppCore(logStream, cn, act, lp, cfg.WhitelistCachePath)
 
 	log.Printf("watch %s", cfg.Logfile)
 

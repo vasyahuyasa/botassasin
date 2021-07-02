@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/vasyahuyasa/botassasin/log"
 )
 
 const (
@@ -54,6 +55,14 @@ func newReverseDNSChecker(cfg reverseDNSCheckerConfig) (*reverseDNSChecker, erro
 		var resolver *net.Resolver
 
 		if r.ResolverAddr != "" {
+
+			resolverAddr := r.ResolverAddr
+
+			// default dns port
+			if !strings.Contains(resolverAddr, ":") {
+				resolverAddr += ":53"
+			}
+
 			resolver = &net.Resolver{
 				PreferGo: true,
 				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -63,9 +72,9 @@ func newReverseDNSChecker(cfg reverseDNSCheckerConfig) (*reverseDNSChecker, erro
 
 					switch network {
 					case "udp", "udp4", "udp6":
-						return d.DialContext(ctx, "udp4", r.ResolverAddr)
+						return d.DialContext(ctx, "udp4", resolverAddr)
 					case "tcp", "tcp4", "tcp6":
-						return d.DialContext(ctx, "tcp4", r.ResolverAddr)
+						return d.DialContext(ctx, "tcp4", resolverAddr)
 					default:
 						panic("PatchNet.Dial: unknown network")
 					}
@@ -73,7 +82,7 @@ func newReverseDNSChecker(cfg reverseDNSCheckerConfig) (*reverseDNSChecker, erro
 			}
 		}
 
-		log.Printf("reverse dns field %q contains [%s] DNS suffix [%s] resolver %s", r.Field, strings.Join(r.FieldContains, ","), strings.Join(r.DomainSuffixes, ","), r.ResolverAddr)
+		log.Printf("reverse dns field %q must contains [%s] DNS suffix [%s] resolver %s", r.Field, strings.Join(r.FieldContains, ","), strings.Join(r.DomainSuffixes, ","), r.ResolverAddr)
 
 		rules = append(rules, reverseDNSCheckerRule{
 			field:         r.Field,
@@ -142,11 +151,11 @@ func (r *reverseDNSCheckerRule) fineDNS(ip net.IP) (bool, error) {
 		// any misconfigured DNS lead to ban
 		dnsErr := &net.DNSError{}
 		if errors.As(err, &dnsErr) {
-			log.Printf("dns error: %v", dnsErr)
+			log.Printf("reverse lookup error: %v", dnsErr)
 			return false, nil
 		}
 
-		return false, fmt.Errorf("cannot lookup addr %q: %w", ip, err)
+		return false, fmt.Errorf("reverse lookup %q failed: %w", ip, err)
 	}
 
 	// forward DNS lookup by name
@@ -159,6 +168,12 @@ func (r *reverseDNSCheckerRule) fineDNS(ip net.IP) (bool, error) {
 		if r.hasAlloweedDNSSuffix(name) {
 			lookupIPs, lookupErr := r.resolver.LookupIPAddr(lookupCtx, name)
 			if lookupErr != nil {
+				dnsErr := &net.DNSError{}
+				if errors.As(err, &dnsErr) {
+					log.Printf("lookup error: %v", dnsErr)
+					return false, nil
+				}
+
 				return false, fmt.Errorf("cannot lookup %q: %w", name, lookupErr)
 			}
 

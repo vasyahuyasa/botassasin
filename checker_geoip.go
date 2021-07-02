@@ -3,10 +3,10 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/oschwald/maxminddb-golang"
+	"github.com/vasyahuyasa/botassasin/log"
 )
 
 const countryField = "country"
