@@ -1,6 +1,6 @@
 # botassasin
 
-
+Tool for watch log file of web server and ban harmful bots with specified criteria
 
 ## Configuration
 
