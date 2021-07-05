@@ -1,0 +1,24 @@
+- name: "Download {{ botassasin_version }} to {{ botassasin_tmp_path }}"
+  get_url:
+    url: "https://github.com/vasyahuyasa/botassasin/releases/download/{{ botassasin_version }}/botassasin"
+    dest: "{{ botassasin_tmp_path }}"
+- name: "Create structure {{ botassasin_path }}"
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ botassasin_path }}"
+    - "{{ botassasin_path }}/lists"
+- name: "Copy bin to {{ botassasin_bin }}"
+  copy:
+    remote_src: yes
+    src: "{{ botassasin_tmp_path }}"
+    dest: "{{ botassasin_bin }}"
+    mode: u+rwx
+- name: "Copy files to {{ botassasin_path }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ botassasin_path }}/{{ item }}"
+  with_items:
+    - config.yaml
+    - lists/our_servers.txt

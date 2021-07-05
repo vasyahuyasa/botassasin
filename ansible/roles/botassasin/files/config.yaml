@@ -1,0 +1,26 @@
+debug: true
+logfile: access.log
+log_format: ^(?P<ip>\d+\.\d+\.\d+\.\d+) - - \[.{26}\] \"(?P<request>[^\"]*)\" \d{3} \d+ \"(?P<referer>[^\"]*)\" \"(?P<user_agent>[^\"]*)\" rt.*$
+checkers:
+  - kind: list
+    sources:
+      - src: ./lists/our_servers.txt
+        type: txt
+        action: whitelist
+      - src: https://ip-ranges.amazonaws.com/ip-ranges.json
+        type: aws_ip_ranges
+        action: whitelist
+        aws_service_filter:
+          - ROUTE53_HEALTHCHECKS
+      - src: https://check.torproject.org/torbulkexitlist
+        type: txt
+        action: block
+block_action:
+    - ip
+    - route
+    - add
+    - blackhole
+    - "{{.ip}}"
+blocklog: block.txt
+blocklog_template: '{{.time}} {{.ip}} {{.country}} {{.checker}} "{{.user_agent}}" "{{.referer}}"'
+whitelist_cache_path: whitelist.txt
