@@ -1,12 +1,21 @@
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - '*'
+
 jobs:
   tests:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v2        
         with:
-          go-version: '1.6.5'
-      - run: go test
+          go-version: '1.16.x'
+      - env:
+          GO111MODULE: on
+        run: go test
   build_publish:
     needs: tests
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') # run only on tags
@@ -17,10 +26,11 @@ jobs:
       - name: Install go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.6.5'
+          go-version: '1.16.x'
       - name: build
         env:
           CGO_ENABLED: 0
+          GO111MODULE: on
         run: go build -o botassasin
       - name: Pack
         run: zip --junk-paths botassasin botassasin
