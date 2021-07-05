@@ -32,12 +32,10 @@ jobs:
           CGO_ENABLED: 0
           GO111MODULE: on
         run: go build -o botassasin
-      - name: Pack
-        run: zip --junk-paths botassasin botassasin
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: botassasin.zip
-          asset_name: botassasin.zip
+          file: botassasin
+          asset_name: botassasin
           tag: ${{ github.ref }}
