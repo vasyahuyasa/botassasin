@@ -1,0 +1,45 @@
+jobs:
+  tests:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.6.5'
+      - run: go test
+  build_publish:
+    needs: tests
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') # run only on tags
+    runs-on: ubuntu-18.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.6.5'
+      - name: build
+        env:
+          CGO_ENABLED: 0
+        run: go build -o botassasin
+      - name: Pack
+        run: zip --junk-paths botassasin botassasin
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./botassasin.zip
+          asset_name: botassasin.zip
+          asset_content_type: application/zip
