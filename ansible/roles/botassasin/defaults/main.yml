@@ -1,4 +1,4 @@
 botassasin_version: v0.0.5
-botassasin_tmp_path: "/tmp/{{botassasin_version}}"
+botassasin_tmp_path: "/tmp/botassasin_{{botassasin_version}}"
 botassasin_path: /root/botassasin
 botassasin_bin: "{{botassasin_path}}/botassasin"
