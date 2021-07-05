@@ -10,12 +10,12 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        env:
-          GO111MODULE: on
+      - uses: actions/setup-go@v2        
         with:
           go-version: '1.6.x'
-      - run: go test
+      - env:
+          GO111MODULE: on
+        run: go test
   build_publish:
     needs: tests
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') # run only on tags
