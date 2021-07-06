@@ -114,12 +114,12 @@ func (core *appcore) run() error {
 		ip := l.IP()
 
 		if core.passCache.Contains(ip) {
-			log.Debug(ip.String(), "in whitelist")
+			log.Debugf("%s in whitelist", ip.String())
 			continue
 		}
 
 		if core.blockCache.Contains(ip) {
-			log.Debug(ip.String(), "in blocklist")
+			log.Debugf("%s in blocklist", ip.String())
 			continue
 		}
 

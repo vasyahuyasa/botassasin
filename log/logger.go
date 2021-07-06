@@ -22,7 +22,7 @@ func Fatalf(format string, v ...interface{}) {
 	stdlog.Fatalf(format, v...)
 }
 
-func Debug(format string, v ...interface{}) {
+func Debugf(format string, v ...interface{}) {
 	if debugMode {
 		Printf(format, v...)
 	}
