@@ -20,5 +20,5 @@
     src: "{{ item }}"
     dest: "{{ botassasin_path }}/{{ item }}"
   with_items:
-    - config.yaml
+    - config.yml
     - lists/our_servers.txt
