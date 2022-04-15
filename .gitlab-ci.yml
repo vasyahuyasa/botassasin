@@ -29,4 +29,4 @@ package:
   image: ${CI_REGISTRY}/root/public-containers/golang:1.18.1-alpine3.15
   script:
     - apk add curl
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file botassasin "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/my_package/0.0.1/botassasin"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file botassasin "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/botassasin/${CI_COMMIT_TAG}/botassasin"'
