@@ -1,0 +1,31 @@
+stages:
+  - test
+  - build
+  - package
+
+tests:
+  stage: test
+  image: ${CI_REGISTRY}/root/public-containers/golang:1.18.1-alpine3.15
+  script:
+    - go test
+
+build:
+  stage: build
+  image: ${CI_REGISTRY}/root/public-containers/golang:1.18.1-alpine3.15
+  variables:
+    CGO_ENABLED: 0
+    GO111MODULE: on
+  script:
+    - go build -o botassasin
+  artifacts:
+    expire_in: 10 min
+    paths:
+      - botassasin
+
+package:
+  stage: package
+  only:
+    - tags
+  image: ${CI_REGISTRY}/root/public-containers/golang:1.18.1-alpine3.15
+  script:
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file botassasin "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/my_package/0.0.1/botassasin"'
