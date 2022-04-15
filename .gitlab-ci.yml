@@ -13,8 +13,8 @@ build:
   stage: build
   image: ${CI_REGISTRY}/root/public-containers/golang:1.18.1-alpine3.15
   variables:
-    CGO_ENABLED: 0
-    GO111MODULE: on
+    CGO_ENABLED: "0"
+    GO111MODULE: "on"
   script:
     - go build -o botassasin
   artifacts:
