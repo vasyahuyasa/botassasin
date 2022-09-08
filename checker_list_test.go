@@ -10,6 +10,15 @@ import (
 	"testing"
 )
 
+const ipFileContent = `1.2.3.4
+1.2.4.0/24
+1.3.0.0/16
+2.2.0.0/8
+3.4.5.6/32
+4.4.4.4
+5.5.5.5
+`
+
 func Test_listChecker_Check_File(t *testing.T) {
 	clear, makeFile := tmpFileCreator()
 	defer clear()
@@ -235,6 +244,145 @@ func Test_listChecker_Check_File(t *testing.T) {
 	}
 }
 
+func Test_listChecker_Check_Block(t *testing.T) {
+	clear, makeFile := tmpFileCreator()
+	defer clear()
+
+	path := makeFile(t, ipFileContent)
+
+	checker, err := newListChecker(listCheckerConfig{
+		Sources: []listCheckerSrcConfig{
+			{
+				Src:    path,
+				Type:   listCheckerSrcTypeTxt,
+				Action: "block",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name string
+		ip   net.IP
+	}{
+		{
+			name: "no mask 1",
+			ip:   net.ParseIP("1.2.3.4"),
+		},
+		{
+			name: "no mask 2",
+			ip:   net.ParseIP("4.4.4.4"),
+		},
+		{
+			name: "no mask 3",
+			ip:   net.ParseIP("5.5.5.5"),
+		},
+		{
+			name: "mask /24",
+			ip:   net.ParseIP("1.2.4.100"),
+		},
+		{
+			name: "mask /24",
+			ip:   net.ParseIP("1.2.4.1"),
+		},
+		{
+			name: "mask /16",
+			ip:   net.ParseIP("1.3.100.100"),
+		},
+		{
+			name: "mask /8",
+			ip:   net.ParseIP("2.50.50.50"),
+		},
+		{
+			name: "mask /32",
+			ip:   net.ParseIP("3.4.5.6"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, got := checker.Check(&logLine{
+				ip: tt.ip,
+			})
+
+			if got != decisionBan {
+				t.Errorf("expect decisionBan but got %v", got)
+			}
+		})
+	}
+}
+
+func Test_listChecker_Check_Allow(t *testing.T) {
+	clear, makeFile := tmpFileCreator()
+	defer clear()
+
+	path := makeFile(t, ipFileContent)
+
+	checker, err := newListChecker(listCheckerConfig{
+		Sources: []listCheckerSrcConfig{
+			{
+				Src:    path,
+				Type:   listCheckerSrcTypeTxt,
+				Action: "whitelist",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name string
+		ip   net.IP
+	}{
+		{
+			name: "no mask 1",
+			ip:   net.ParseIP("1.2.3.4"),
+		},
+		{
+			name: "no mask 2",
+			ip:   net.ParseIP("4.4.4.4"),
+		},
+		{
+			name: "no mask 3",
+			ip:   net.ParseIP("5.5.5.5"),
+		},
+		{
+			name: "mask /24",
+			ip:   net.ParseIP("1.2.4.100"),
+		},
+		{
+			name: "mask /24",
+			ip:   net.ParseIP("1.2.4.1"),
+		},
+		{
+			name: "mask /16",
+			ip:   net.ParseIP("1.3.100.100"),
+		},
+		{
+			name: "mask /8",
+			ip:   net.ParseIP("2.50.50.50"),
+		},
+		{
+			name: "mask /32",
+			ip:   net.ParseIP("3.4.5.6"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, got := checker.Check(&logLine{
+				ip: tt.ip,
+			})
+
+			if got != decisionWhitelist {
+				t.Errorf("expect decisionWhitelist but got %v", got)
+			}
+		})
+	}
+}
 func Test_listChecker_Check_Webserver(t *testing.T) {
 	clear, makeWebserver := tmpWebServerCreator()
 	defer clear()

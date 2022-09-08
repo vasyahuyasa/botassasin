@@ -8,10 +8,13 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/netip"
 	"strings"
 	"time"
 
 	"github.com/vasyahuyasa/botassasin/log"
+	"github.com/yl2chen/cidranger"
+	"go4.org/netipx"
 )
 
 const (
@@ -50,6 +53,16 @@ type listCheckerConfig struct {
 
 type ipList struct {
 	ips    []*net.IPNet
+	action listCheckerAction
+}
+
+type ipList2 struct {
+	ranger cidranger.Ranger
+	action listCheckerAction
+}
+
+type ipList3 struct {
+	ipset  *netipx.IPSet
 	action listCheckerAction
 }
 
@@ -124,6 +137,16 @@ func (list *ipList) contains(ip net.IP) bool {
 	}
 
 	return false
+}
+
+func (list *ipList2) contains(ip net.IP) bool {
+	ok, _ := list.ranger.Contains(ip)
+
+	return ok
+}
+
+func (list *ipList3) contains(ip netip.Addr) bool {
+	return list.ipset.Contains(ip)
 }
 
 func bytesFromSrc(src string) ([]byte, error) {

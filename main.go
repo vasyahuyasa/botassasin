@@ -2,12 +2,34 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"os"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vasyahuyasa/botassasin/log"
+
+	_ "net/http/pprof"
 )
 
 const configFile = "config.yml"
+
+var (
+	checkerSummary = promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Name:       "botassasin_checker_duration_seconds",
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+	}, []string{"checker"})
+
+	totalLinesCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "botassasin_records_processed_total",
+	}, []string{"kind"})
+
+	blockSummary = promauto.NewSummary(prometheus.SummaryOpts{
+		Name:       "botassasin_block_action_duration_seconds",
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+	})
+)
 
 func main() {
 
@@ -32,7 +54,18 @@ func main() {
 
 	log.Println("log format:", cfg.LogFormat)
 
-	cn, err := newChainFromConfig(cfg)
+	go func() {
+		err := setUpMetricServer()
+		if err != nil {
+			log.Fatalf("cannot create metric server: %v", err)
+		}
+	}()
+
+	measureFn := func(name string, seconds float64) {
+		checkerSummary.WithLabelValues(name).Observe(float64(seconds))
+	}
+
+	cn, err := newChainFromConfig(cfg, measureFn)
 	if err != nil {
 		log.Fatalf("cannot create chain: %v", err)
 	}
@@ -59,7 +92,15 @@ func main() {
 		log.Fatalf("cannot create log printer: %v", err)
 	}
 
-	app := newAppCore(logStream, cn, act, lp, cfg.WhitelistCachePath)
+	hitCounter := func(name string) {
+		totalLinesCounter.WithLabelValues(name).Inc()
+	}
+
+	timeMeasurer := func(seconds float64) {
+		blockSummary.Observe(seconds)
+	}
+
+	app := newAppCore(logStream, cn, act, lp, cfg.WhitelistCachePath, hitCounter, timeMeasurer)
 
 	log.Printf("watch %s", cfg.Logfile)
 
@@ -68,4 +109,9 @@ func main() {
 	if err != nil {
 		log.Printf("log streamer exit with error: %v", err)
 	}
+}
+
+func setUpMetricServer() error {
+	http.Handle("/metrics", promhttp.Handler())
+	return http.ListenAndServe(":2112", nil)
 }
