@@ -1,4 +1,5 @@
 debug: false
+metrics_addr: 0.0.0.0:2112
 logfile: test.log
 log_format: ^(?P<ip>\d+\.\d+\.\d+\.\d+) - - \[.{26}\] \"(?P<request>[^\"]*)\" \d{3} \d+ \"(?P<referer>[^\"]*)\" \"(?P<user_agent>[^\"]*)\" rt.*$
 checkers:

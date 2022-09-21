@@ -14,6 +14,7 @@ import (
 )
 
 const configFile = "config.yml"
+const defaultMetricsAddr = "0.0.0.0:2112"
 
 var (
 	checkerSummary = promauto.NewSummaryVec(prometheus.SummaryOpts{
@@ -32,18 +33,7 @@ var (
 )
 
 func main() {
-
-	f, err := os.Open(configFile)
-	if err != nil {
-		log.Fatalf("cannot open config file %s: %v", configFile, err)
-	}
-
-	defer f.Close()
-
-	cfg, err := loadConfig(f)
-	if err != nil {
-		log.Fatalf("cannot load config: %v", err)
-	}
+	cfg := readConfig()
 
 	log.EnableDebug(cfg.Debug)
 
@@ -54,8 +44,13 @@ func main() {
 
 	log.Println("log format:", cfg.LogFormat)
 
+	metricsAddr := defaultMetricsAddr
+	if cfg.MetricsAddr != "" {
+		metricsAddr = cfg.MetricsAddr
+	}
+
 	go func() {
-		err := setUpMetricServer()
+		err := setUpMetricServer(metricsAddr)
 		if err != nil {
 			log.Fatalf("cannot create metric server: %v", err)
 		}
@@ -111,7 +106,23 @@ func main() {
 	}
 }
 
-func setUpMetricServer() error {
+func setUpMetricServer(addr string) error {
 	http.Handle("/metrics", promhttp.Handler())
-	return http.ListenAndServe(":2112", nil)
+	return http.ListenAndServe(addr, nil)
+}
+
+func readConfig() config {
+	f, err := os.Open(configFile)
+	if err != nil {
+		log.Fatalf("cannot open config file %s: %v", configFile, err)
+	}
+
+	defer f.Close()
+
+	cfg, err := loadConfig(f)
+	if err != nil {
+		log.Fatalf("cannot load config: %v", err)
+	}
+
+	return cfg
 }
