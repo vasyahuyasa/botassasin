@@ -51,16 +51,22 @@ type listCheckerConfig struct {
 	Sources []listCheckerSrcConfig
 }
 
+// ipList naive ip map implementation with stdlib net.IPNet
+// not used at the momnet, only benchmark
 type ipList struct {
 	ips    []*net.IPNet
 	action listCheckerAction
 }
 
+// ipList2 ip map implementation with cidranger package
+// not used at the momnet, only benchmark
 type ipList2 struct {
 	ranger cidranger.Ranger
 	action listCheckerAction
 }
 
+// ipList3 ip map implementation with netipx.IPSet package
+// most perfomant at the momnet
 type ipList3 struct {
 	ipset  *netipx.IPSet
 	action listCheckerAction
