@@ -98,7 +98,7 @@ General params
 ### reverse_dns
 
 Reverse DNS checker. Mainly used for verify search engines bots.
-1. Make reverse DNS query via `resolver` and get hostname
+1. Make reverse DNS query via `resolver` and get hostname (you can specify list of dns servers, every check get next DNS in list)
 2. Make sure hostname ends with `domain_suffixes`
 3. Make forward DNS query and verify hostname resolve to original IP
 
@@ -114,7 +114,9 @@ Example
       domain_suffixes: 
         - googlebot.com
         - google.com
-      resolver: 8.8.8.8:53
+      resolver: 
+        - 8.8.8.8:53
+        - 1.1.1.1:53
 ```
 
 General params
@@ -130,4 +132,4 @@ Rule params
 | field       | string | Field for check. Rule triggered if field contains specified substrins
 | field_contains | array | List of substrings. One of those substring must be present in `field` for trigger rule
 | domain_suffixes | array | List of suffixes. Hostname of reverse DNS query must have one of suffixes othervise IP will be banned
-| resolver | string | Address of DNS server for resolve if empty use system resolver
+| resolver | array | string | DNS servers for resolve (round robin) if empty use system resolver

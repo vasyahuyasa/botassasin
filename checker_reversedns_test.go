@@ -52,16 +52,20 @@ func Test_reverseDNSChecker_Check(t *testing.T) {
 			name: "simple whitelist",
 			cfg: reverseDNSCheckerConfig{
 				Rules: []struct {
-					Field          string   `yaml:"field"`
-					FieldContains  []string `yaml:"field_contains"`
-					DomainSuffixes []string `yaml:"domain_suffixes"`
-					ResolverAddr   string   `yaml:"resolver"`
+					Field          string             `yaml:"field"`
+					FieldContains  []string           `yaml:"field_contains"`
+					DomainSuffixes []string           `yaml:"domain_suffixes"`
+					Resolvers      resolverListConfig `yaml:"resolver"`
 				}{
 					{
 						Field:          "user_agent",
 						FieldContains:  []string{"clientbot"},
 						DomainSuffixes: []string{"unittesting.org"},
-						ResolverAddr:   createDNSServer(dnsTestZone),
+						Resolvers: resolverListConfig{
+							addrs: []string{
+								createDNSServer(dnsTestZone),
+							},
+						},
 					},
 				},
 			},
@@ -78,16 +82,20 @@ func Test_reverseDNSChecker_Check(t *testing.T) {
 			name: "googlebot whitelist",
 			cfg: reverseDNSCheckerConfig{
 				Rules: []struct {
-					Field          string   `yaml:"field"`
-					FieldContains  []string `yaml:"field_contains"`
-					DomainSuffixes []string `yaml:"domain_suffixes"`
-					ResolverAddr   string   `yaml:"resolver"`
+					Field          string             `yaml:"field"`
+					FieldContains  []string           `yaml:"field_contains"`
+					DomainSuffixes []string           `yaml:"domain_suffixes"`
+					Resolvers      resolverListConfig `yaml:"resolver"`
 				}{
 					{
 						Field:          "user_agent",
 						FieldContains:  []string{"Googlebot"},
 						DomainSuffixes: []string{"googlebot.com", "google.com"},
-						ResolverAddr:   createDNSServer(dnsTestZone),
+						Resolvers: resolverListConfig{
+							addrs: []string{
+								createDNSServer(dnsTestZone),
+							},
+						},
 					},
 				},
 			},
@@ -104,16 +112,20 @@ func Test_reverseDNSChecker_Check(t *testing.T) {
 			name: "not exist PTR blacklist",
 			cfg: reverseDNSCheckerConfig{
 				Rules: []struct {
-					Field          string   `yaml:"field"`
-					FieldContains  []string `yaml:"field_contains"`
-					DomainSuffixes []string `yaml:"domain_suffixes"`
-					ResolverAddr   string   `yaml:"resolver"`
+					Field          string             `yaml:"field"`
+					FieldContains  []string           `yaml:"field_contains"`
+					DomainSuffixes []string           `yaml:"domain_suffixes"`
+					Resolvers      resolverListConfig `yaml:"resolver"`
 				}{
 					{
 						Field:          "user_agent",
 						FieldContains:  []string{"clientbot"},
 						DomainSuffixes: []string{"unittesting.org"},
-						ResolverAddr:   createDNSServer(dnsTestZone),
+						Resolvers: resolverListConfig{
+							addrs: []string{
+								createDNSServer(dnsTestZone),
+							},
+						},
 					},
 				},
 			},
@@ -130,16 +142,20 @@ func Test_reverseDNSChecker_Check(t *testing.T) {
 			name: "bad PTR blacklist",
 			cfg: reverseDNSCheckerConfig{
 				Rules: []struct {
-					Field          string   `yaml:"field"`
-					FieldContains  []string `yaml:"field_contains"`
-					DomainSuffixes []string `yaml:"domain_suffixes"`
-					ResolverAddr   string   `yaml:"resolver"`
+					Field          string             `yaml:"field"`
+					FieldContains  []string           `yaml:"field_contains"`
+					DomainSuffixes []string           `yaml:"domain_suffixes"`
+					Resolvers      resolverListConfig `yaml:"resolver"`
 				}{
 					{
 						Field:          "user_agent",
 						FieldContains:  []string{"clientbot"},
 						DomainSuffixes: []string{"googlebot.com."},
-						ResolverAddr:   createDNSServer(dnsTestZone),
+						Resolvers: resolverListConfig{
+							addrs: []string{
+								createDNSServer(dnsTestZone),
+							},
+						},
 					},
 				},
 			},
@@ -156,16 +172,20 @@ func Test_reverseDNSChecker_Check(t *testing.T) {
 			name: "fake PTR blacklist",
 			cfg: reverseDNSCheckerConfig{
 				Rules: []struct {
-					Field          string   `yaml:"field"`
-					FieldContains  []string `yaml:"field_contains"`
-					DomainSuffixes []string `yaml:"domain_suffixes"`
-					ResolverAddr   string   `yaml:"resolver"`
+					Field          string             `yaml:"field"`
+					FieldContains  []string           `yaml:"field_contains"`
+					DomainSuffixes []string           `yaml:"domain_suffixes"`
+					Resolvers      resolverListConfig `yaml:"resolver"`
 				}{
 					{
 						Field:          "user_agent",
 						FieldContains:  []string{"googlebot"},
 						DomainSuffixes: []string{"googlebot.com."},
-						ResolverAddr:   createDNSServer(dnsTestZone),
+						Resolvers: resolverListConfig{
+							addrs: []string{
+								createDNSServer(dnsTestZone),
+							},
+						},
 					},
 				},
 			},

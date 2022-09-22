@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -16,20 +17,31 @@ const (
 	dnsDialerTimeout      = time.Second * 5
 )
 
+type resolverListConfig struct {
+	addrs []string
+}
+
 type reverseDNSCheckerConfig struct {
 	Rules []struct {
-		Field          string   `yaml:"field"`
-		FieldContains  []string `yaml:"field_contains"`
-		DomainSuffixes []string `yaml:"domain_suffixes"`
-		ResolverAddr   string   `yaml:"resolver"`
+		Field          string             `yaml:"field"`
+		FieldContains  []string           `yaml:"field_contains"`
+		DomainSuffixes []string           `yaml:"domain_suffixes"`
+		Resolvers      resolverListConfig `yaml:"resolver"`
 	} `yaml:"rules"`
+}
+
+type resolverPool struct {
+	// next index in pool
+	next int
+
+	resolvers []*net.Resolver
 }
 
 type reverseDNSCheckerRule struct {
 	field         string
 	fieldContains []string
 	domainSufixes []string
-	resolver      *net.Resolver
+	resolverPool  *resolverPool
 }
 
 type reverseDNSChecker struct {
@@ -52,47 +64,54 @@ func newReverseDNSChecker(cfg reverseDNSCheckerConfig) (*reverseDNSChecker, erro
 			return nil, fmt.Errorf("domain_suffixes cannot be empty")
 		}
 
-		var resolver *net.Resolver
+		resolverPool := makeResolverPoolFromConfig(r.Resolvers)
 
-		if r.ResolverAddr != "" {
-
-			resolverAddr := r.ResolverAddr
-
-			// default dns port
-			if !strings.Contains(resolverAddr, ":") {
-				resolverAddr += ":53"
-			}
-
-			resolver = &net.Resolver{
-				PreferGo: true,
-				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-					d := net.Dialer{
-						Timeout: dnsDialerTimeout,
-					}
-
-					switch network {
-					case "udp", "udp4", "udp6":
-						return d.DialContext(ctx, "udp4", resolverAddr)
-					case "tcp", "tcp4", "tcp6":
-						return d.DialContext(ctx, "tcp4", resolverAddr)
-					default:
-						panic("PatchNet.Dial: unknown network")
-					}
-				},
-			}
-		}
-
-		log.Printf("reverse dns field %q must contains [%s] DNS suffix [%s] resolver %s", r.Field, strings.Join(r.FieldContains, ","), strings.Join(r.DomainSuffixes, ","), r.ResolverAddr)
+		log.Printf("reverse dns field %q must contains [%s] DNS suffix [%s] resolver %s", r.Field, strings.Join(r.FieldContains, ","), strings.Join(r.DomainSuffixes, ","), r.Resolvers)
 
 		rules = append(rules, reverseDNSCheckerRule{
 			field:         r.Field,
 			fieldContains: r.FieldContains,
 			domainSufixes: r.DomainSuffixes,
-			resolver:      resolver,
+			resolverPool:  resolverPool,
 		})
 	}
 
 	return &reverseDNSChecker{rules: rules}, nil
+}
+
+func makeResolverPoolFromConfig(resolversCfg resolverListConfig) *resolverPool {
+	if resolversCfg.len() == 0 {
+		return newDefaultResolverPool()
+	}
+
+	var resolvers []*net.Resolver
+
+	for _, addr := range resolversCfg.addrs {
+		// default dns port
+		if !strings.Contains(addr, ":") {
+			addr += ":53"
+		}
+
+		resolvers = append(resolvers, &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{
+					Timeout: dnsDialerTimeout,
+				}
+
+				switch network {
+				case "udp", "udp4", "udp6":
+					return d.DialContext(ctx, "udp4", addr)
+				case "tcp", "tcp4", "tcp6":
+					return d.DialContext(ctx, "tcp4", addr)
+				default:
+					panic("PatchNet.Dial: unknown network")
+				}
+			},
+		})
+	}
+
+	return newResolverPool(resolvers)
 }
 
 func (rdns *reverseDNSChecker) Check(l *logLine) (score harmScore, descision instantDecision) {
@@ -145,7 +164,9 @@ func (r *reverseDNSCheckerRule) fineDNS(ip net.IP) (bool, error) {
 	defer cancel()
 
 	// reverse DNS lookup
-	addrs, err := r.resolver.LookupAddr(ctx, ip.String())
+	resolver := r.resolverPool.get()
+
+	addrs, err := resolver.LookupAddr(ctx, ip.String())
 
 	if err != nil {
 		// any misconfigured DNS lead to ban
@@ -166,7 +187,7 @@ func (r *reverseDNSCheckerRule) fineDNS(ip net.IP) (bool, error) {
 		defer lookupCancel()
 
 		if r.hasAlloweedDNSSuffix(name) {
-			lookupIPs, lookupErr := r.resolver.LookupIPAddr(lookupCtx, name)
+			lookupIPs, lookupErr := resolver.LookupIPAddr(lookupCtx, name)
 			if lookupErr != nil {
 				dnsErr := &net.DNSError{}
 				if errors.As(err, &dnsErr) {
@@ -186,4 +207,83 @@ func (r *reverseDNSCheckerRule) fineDNS(ip net.IP) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (list *resolverListConfig) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	addr, ok := list.parseAsString(data)
+	if ok {
+		list.addrs = []string{
+			addr,
+		}
+
+		return nil
+	}
+
+	addrs, err := list.parseAsStringSlice(data)
+	if err != nil {
+		return err
+	}
+
+	list.addrs = addrs
+
+	return nil
+}
+
+func (list *resolverListConfig) parseAsString(data [](byte)) (string, bool) {
+	var str string
+
+	err := json.Unmarshal(data, &str)
+	if err != nil {
+		return "", false
+	}
+
+	return str, true
+}
+
+func (list *resolverListConfig) parseAsStringSlice(data [](byte)) ([]string, error) {
+	var addrs []string
+
+	err := json.Unmarshal(data, &addrs)
+	if err != nil {
+		return nil, err
+	}
+
+	return addrs, nil
+}
+
+func (list *resolverListConfig) len() int {
+	return len(list.addrs)
+}
+
+func newResolverPool(resolvers []*net.Resolver) *resolverPool {
+	if len(resolvers) == 0 {
+		log.Fatalf("resolvers list must contain at last one resolver")
+	}
+
+	return &resolverPool{
+		resolvers: resolvers,
+	}
+}
+
+func newDefaultResolverPool() *resolverPool {
+	return &resolverPool{
+		resolvers: []*net.Resolver{
+			&net.Resolver{},
+		},
+	}
+}
+
+func (pool *resolverPool) get() *net.Resolver {
+	r := pool.resolvers[pool.next]
+
+	pool.next++
+	if pool.next > len(pool.resolvers) {
+		pool.next = 0
+	}
+
+	return r
 }
