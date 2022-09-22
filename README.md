@@ -8,7 +8,8 @@ botassasin require `config.yml` for run. Check `config.yml.example` for full exa
 
 | Param                | Type          | Description
 |----------------------|---------------|----------------------------
-| debug                | bool          | Print more information
+| debug                | bool          | Print more information. Default: `false`
+| metrics_addr         | string        | Interface addres and port for metrics server. Default: `0.0.0.0:2112` 
 | logfile              | string        | File watched by botassasin
 | log_format           | string        | Line format in logfile. Must be regexp in [Go re2 syntax](https://github.com/google/re2/wiki/Syntax) (ex. `^(?P<ip>\d+\.\d+\.\d+\.\d+) - - \[.{26}\] \"(?P<request>[^\"]*)\" \d{3} \d+ \"(?P<referer>[^\"]*)\" \"(?P<user_agent>[^\"]*)\" rt.*$`)
 | checkers             | array         | List of checkers with configuration. Checkers executed in order

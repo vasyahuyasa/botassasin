@@ -2,26 +2,38 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"os"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vasyahuyasa/botassasin/log"
+
+	_ "net/http/pprof"
 )
 
 const configFile = "config.yml"
+const defaultMetricsAddr = "0.0.0.0:2112"
+
+var (
+	checkerSummary = promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Name:       "botassasin_checker_duration_seconds",
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+	}, []string{"checker"})
+
+	totalLinesCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "botassasin_records_processed_total",
+	}, []string{"kind"})
+
+	blockSummary = promauto.NewSummary(prometheus.SummaryOpts{
+		Name:       "botassasin_block_action_duration_seconds",
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+	})
+)
 
 func main() {
-
-	f, err := os.Open(configFile)
-	if err != nil {
-		log.Fatalf("cannot open config file %s: %v", configFile, err)
-	}
-
-	defer f.Close()
-
-	cfg, err := loadConfig(f)
-	if err != nil {
-		log.Fatalf("cannot load config: %v", err)
-	}
+	cfg := readConfig()
 
 	log.EnableDebug(cfg.Debug)
 
@@ -32,7 +44,23 @@ func main() {
 
 	log.Println("log format:", cfg.LogFormat)
 
-	cn, err := newChainFromConfig(cfg)
+	metricsAddr := defaultMetricsAddr
+	if cfg.MetricsAddr != "" {
+		metricsAddr = cfg.MetricsAddr
+	}
+
+	go func() {
+		err := setUpMetricServer(metricsAddr)
+		if err != nil {
+			log.Fatalf("cannot create metric server: %v", err)
+		}
+	}()
+
+	measureFn := func(name string, seconds float64) {
+		checkerSummary.WithLabelValues(name).Observe(float64(seconds))
+	}
+
+	cn, err := newChainFromConfig(cfg, measureFn)
 	if err != nil {
 		log.Fatalf("cannot create chain: %v", err)
 	}
@@ -59,7 +87,15 @@ func main() {
 		log.Fatalf("cannot create log printer: %v", err)
 	}
 
-	app := newAppCore(logStream, cn, act, lp, cfg.WhitelistCachePath)
+	hitCounter := func(name string) {
+		totalLinesCounter.WithLabelValues(name).Inc()
+	}
+
+	timeMeasurer := func(seconds float64) {
+		blockSummary.Observe(seconds)
+	}
+
+	app := newAppCore(logStream, cn, act, lp, cfg.WhitelistCachePath, hitCounter, timeMeasurer)
 
 	log.Printf("watch %s", cfg.Logfile)
 
@@ -68,4 +104,25 @@ func main() {
 	if err != nil {
 		log.Printf("log streamer exit with error: %v", err)
 	}
+}
+
+func setUpMetricServer(addr string) error {
+	http.Handle("/metrics", promhttp.Handler())
+	return http.ListenAndServe(addr, nil)
+}
+
+func readConfig() config {
+	f, err := os.Open(configFile)
+	if err != nil {
+		log.Fatalf("cannot open config file %s: %v", configFile, err)
+	}
+
+	defer f.Close()
+
+	cfg, err := loadConfig(f)
+	if err != nil {
+		log.Fatalf("cannot load config: %v", err)
+	}
+
+	return cfg
 }

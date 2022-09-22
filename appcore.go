@@ -17,7 +17,14 @@ const (
 	saveInterval         = time.Minute
 )
 
+type hitCounter func(name string)
+
+type executionTimeMeasure func(seconds float64)
+
 type appcore struct {
+	hit              hitCounter
+	executionMeasure executionTimeMeasure
+
 	passCache  *ipCache
 	blockCache *ipCache
 
@@ -35,7 +42,7 @@ type ipCache struct {
 	}
 }
 
-func newAppCore(streamer *logStreamer, c *chain, act *action, lp *logPrinter, cachepath string) *appcore {
+func newAppCore(streamer *logStreamer, c *chain, act *action, lp *logPrinter, cachepath string, hit hitCounter, executionMeasure executionTimeMeasure) *appcore {
 	passCache, err := newIPCaheFromFile(cachepath)
 	if err != nil {
 		log.Printf("cannot load cache file %s: %v", cachepath, err)
@@ -43,8 +50,10 @@ func newAppCore(streamer *logStreamer, c *chain, act *action, lp *logPrinter, ca
 	}
 
 	return &appcore{
-		passCache:  passCache,
-		blockCache: newIPCache(""),
+		executionMeasure: executionMeasure,
+		hit:              hit,
+		passCache:        passCache,
+		blockCache:       newIPCache(""),
 
 		streamer: streamer,
 		c:        c,
@@ -111,31 +120,37 @@ func (core *appcore) run() error {
 	go core.passCache.saver()
 
 	for l := range core.streamer.C() {
-		ip := l.IP()
+		// ip := l.IP()
 
-		if core.passCache.Contains(ip) {
-			log.Debugf("%s in whitelist", ip.String())
-			continue
-		}
+		core.hit("total")
 
-		if core.blockCache.Contains(ip) {
-			log.Debugf("%s in blocklist", ip.String())
-			continue
-		}
+		// if core.passCache.Contains(ip) {
+		// 	core.hit("whitelist")
+		// 	log.Debugf("%s in whitelist", ip.String())
+		// 	continue
+		// }
+
+		// if core.blockCache.Contains(ip) {
+		// 	core.hit("blocklist")
+		// 	log.Debugf("%s in blocklist", ip.String())
+		// 	continue
+		// }
 
 		if core.c.NeedBan(l) {
-			core.blockCache.Add(ip)
+			//core.blockCache.Add(ip)
 
 			core.log.Println(*l)
 
+			startedAt := time.Now()
 			err := core.act.Execute(*l)
 			if err != nil {
 				log.Printf("cannot execute action: %v", err)
 			}
+			core.executionMeasure(time.Since(startedAt).Seconds())
 			continue
 		}
 
-		core.passCache.Add(ip)
+		//core.passCache.Add(ip)
 	}
 
 	return core.streamer.Err()

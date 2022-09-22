@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/vasyahuyasa/botassasin/log"
 	"gopkg.in/yaml.v2"
@@ -35,10 +36,13 @@ type checkerWithKind struct {
 }
 
 type chain struct {
+	reportFn reportCheckerWorkTime
 	checkers []*checkerWithKind
 }
 
-func newChainFromConfig(cfg config) (*chain, error) {
+type reportCheckerWorkTime func(name string, seconds float64)
+
+func newChainFromConfig(cfg config, reportFn reportCheckerWorkTime) (*chain, error) {
 	var checkers []*checkerWithKind
 
 	for _, checkerCfg := range cfg.Checkers {
@@ -51,6 +55,7 @@ func newChainFromConfig(cfg config) (*chain, error) {
 	}
 
 	return &chain{
+		reportFn: reportFn,
 		checkers: checkers,
 	}, nil
 }
@@ -59,7 +64,11 @@ func (c *chain) NeedBan(l *logLine) bool {
 	score := harmScore(0)
 
 	for _, chk := range c.checkers {
+		startedAt := time.Now()
+
 		s, decision := chk.Check(l)
+
+		c.reportFn(chk.kind, time.Since(startedAt).Seconds())
 
 		log.Debugf("%s %s score: %d decision: %s", l.IP(), chk.kind, s, decision)
 

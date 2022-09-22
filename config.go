@@ -16,6 +16,7 @@ type configBlockAction struct {
 
 type config struct {
 	Debug              bool              `yaml:"debug"`
+	MetricsAddr        string            `yaml:"metrics_addr"`
 	Logfile            string            `yaml:"logfile"`
 	LogFormat          string            `yaml:"log_format"`
 	Checkers           []checkerConfig   `yaml:"checkers"`
