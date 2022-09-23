@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -208,51 +207,30 @@ func (r *reverseDNSCheckerRule) fineDNS(ip net.IP) (bool, error) {
 
 	return false, nil
 }
+func (list *resolverListConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
 
-func (list *resolverListConfig) UnmarshalJSON(data []byte) error {
-	if len(data) == 0 {
-		return nil
-	}
-
-	addr, ok := list.parseAsString(data)
-	if ok {
-		list.addrs = []string{
-			addr,
+	err := unmarshal(&str)
+	if err == nil {
+		if str != "" {
+			list.addrs = []string{
+				str,
+			}
 		}
 
 		return nil
 	}
 
-	addrs, err := list.parseAsStringSlice(data)
+	var strList []string
+
+	err = unmarshal(&strList)
 	if err != nil {
 		return err
 	}
 
-	list.addrs = addrs
+	list.addrs = strList
 
 	return nil
-}
-
-func (list *resolverListConfig) parseAsString(data [](byte)) (string, bool) {
-	var str string
-
-	err := json.Unmarshal(data, &str)
-	if err != nil {
-		return "", false
-	}
-
-	return str, true
-}
-
-func (list *resolverListConfig) parseAsStringSlice(data [](byte)) ([]string, error) {
-	var addrs []string
-
-	err := json.Unmarshal(data, &addrs)
-	if err != nil {
-		return nil, err
-	}
-
-	return addrs, nil
 }
 
 func (list *resolverListConfig) len() int {
