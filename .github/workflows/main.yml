@@ -21,12 +21,10 @@ jobs:
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') # run only on tags
     runs-on: ubuntu-18.04
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: Install go
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
         with:
-          go-version: '1.16.x'
+          go-version: '1.18.x'
       - name: build
         env:
           CGO_ENABLED: 0
